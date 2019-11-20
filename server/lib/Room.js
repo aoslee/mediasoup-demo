@@ -761,6 +761,7 @@ class Room extends EventEmitter
 						displayName : joinedPeer.data.displayName,
 						device      : joinedPeer.data.device
 					}));
+
 				accept({ peers: peerInfos });
 
 				// Mark the new Peer as joined.
@@ -859,13 +860,14 @@ class Room extends EventEmitter
 				});
 
 				// NOTE: For testing.
-				// await transport.enablePacketEvent([ 'probation' ]);
+				// await transport.enableTraceEvent([ 'probation', 'bwe' ]);
+				// await transport.enableTraceEvent([ 'bwe' ]);
 
-				transport.on('packet', (packet) =>
+				transport.on('trace', (trace) =>
 				{
 					logger.info(
-						'transport "packet" event [producerId:%s, packet:%o]',
-						transport.id, packet);
+						'transport "trace" event [transportId:%s, trace.type:%s, trace:%o]',
+						transport.id, trace.type, trace);
 				});
 
 				// Store the WebRtcTransport into the protoo Peer data Object.
@@ -964,14 +966,15 @@ class Room extends EventEmitter
 				});
 
 				// NOTE: For testing.
-				// await producer.enablePacketEvent([ 'rtp', 'nack', 'pli', 'fir' ]);
-				// await producer.enablePacketEvent([ 'pli', 'fir' ]);
+				// await producer.enableTraceEvent([ 'rtp', 'keyframe', 'nack', 'pli', 'fir' ]);
+				// await producer.enableTraceEvent([ 'pli', 'fir' ]);
+				// await producer.enableTraceEvent([ 'keyframe' ]);
 
-				producer.on('packet', (packet) =>
+				producer.on('trace', (trace) =>
 				{
 					logger.info(
-						'producer "packet" event [producerId:%s, packet:%o]',
-						producer.id, packet);
+						'producer "trace" event [producerId:%s, trace.type:%s, trace:%o]',
+						producer.id, trace.type, trace);
 				});
 
 				accept({ id: producer.id });
@@ -1095,7 +1098,7 @@ class Room extends EventEmitter
 				break;
 			}
 
-			case 'setConsumerPreferedLayers':
+			case 'setConsumerPreferredLayers':
 			{
 				// Ensure the Peer is joined.
 				if (!peer.data.joined)
@@ -1108,6 +1111,25 @@ class Room extends EventEmitter
 					throw new Error(`consumer with id "${consumerId}" not found`);
 
 				await consumer.setPreferredLayers({ spatialLayer, temporalLayer });
+
+				accept();
+
+				break;
+			}
+
+			case 'setConsumerPriority':
+			{
+				// Ensure the Peer is joined.
+				if (!peer.data.joined)
+					throw new Error('Peer not yet joined');
+
+				const { consumerId, priority } = request.data;
+				const consumer = peer.data.consumers.get(consumerId);
+
+				if (!consumer)
+					throw new Error(`consumer with id "${consumerId}" not found`);
+
+				await consumer.setPriority(priority);
 
 				accept();
 
@@ -1511,14 +1533,15 @@ class Room extends EventEmitter
 		});
 
 		// NOTE: For testing.
-		// await consumer.enablePacketEvent([ 'rtp', 'nack', 'pli', 'fir' ]);
-		// await consumer.enablePacketEvent([ 'pli', 'fir' ]);
+		// await consumer.enableTraceEvent([ 'rtp', 'keyframe', 'nack', 'pli', 'fir' ]);
+		// await consumer.enableTraceEvent([ 'pli', 'fir' ]);
+		// await consumer.enableTraceEvent([ 'keyframe' ]);
 
-		consumer.on('packet', (packet) =>
+		consumer.on('trace', (trace) =>
 		{
 			logger.info(
-				'consumer "packet" event [producerId:%s, packet:%o]',
-				consumer.id, packet);
+				'consumer "trace" event [producerId:%s, trace.type:%s, trace:%o]',
+				consumer.id, trace.type, trace);
 		});
 
 		// Send a protoo request to the remote Peer with Consumer parameters.
