@@ -17,7 +17,7 @@ const protoo = require('protoo-server');
 const mediasoup = require('mediasoup');
 const express = require('express');
 const bodyParser = require('body-parser');
-const AwaitQueue = require('awaitqueue');
+const { AwaitQueue } = require('awaitqueue');
 const Logger = require('./lib/Logger');
 const Room = require('./lib/Room');
 const interactiveServer = require('./lib/interactiveServer');
@@ -76,7 +76,7 @@ async function run()
 	// Run a protoo WebSocketServer.
 	await runProtooWebSocketServer();
 
-	// Log rooms status every 30 seconds.
+	// Log rooms status every X seconds.
 	setInterval(() =>
 	{
 		for (const room of rooms.values())
@@ -114,6 +114,14 @@ async function runMediasoupWorkers()
 		});
 
 		mediasoupWorkers.push(worker);
+
+		// Log worker resource usage every X seconds.
+		setInterval(async () =>
+		{
+			const usage = await worker.getResourceUsage();
+
+			logger.info('mediasoup Worker resource usage [pid:%d]: %o', worker.pid, usage);
+		}, 120000);
 	}
 }
 
@@ -207,9 +215,9 @@ async function createExpressApp()
 
 	/**
 	 * POST API to create a mediasoup Transport associated to a Broadcaster.
-	 * It can be a PLainRtpTransport or a WebRtcTransport depending on the
+	 * It can be a PlainTransport or a WebRtcTransport depending on the
 	 * type parameters in the body. There are also additional parameters for
-	 * PLainRtpTransport.
+	 * PlainTransport.
 	 */
 	expressApp.post(
 		'/rooms/:roomId/broadcasters/:broadcasterId/transports',
@@ -239,7 +247,7 @@ async function createExpressApp()
 
 	/**
 	 * POST API to connect a Transport belonging to a Broadcaster. Not needed
-	 * for PlainRtpTransport if it was created with comedia or multiSource options
+	 * for PlainTransport if it was created with comedia or multiSource options
 	 * set to true.
 	 */
 	expressApp.post(

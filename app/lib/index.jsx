@@ -115,6 +115,7 @@ async function run()
 		switch (key)
 		{
 			case 'roomId':
+			case 'handler':
 			case 'simulcast':
 			case 'sharingSimulcast':
 			case 'produce':
@@ -169,7 +170,7 @@ async function run()
 			peerId,
 			displayName,
 			device,
-			handler,
+			handlerName : handler,
 			useSimulcast,
 			useSharingSimulcast,
 			forceTcp,
@@ -234,7 +235,7 @@ window.__startDataChannelTest = function()
 		if (window.DP)
 		{
 			view.setUint32(0, number++);
-			window.DP.send(buffer);
+			roomClient.sendChatMessage(buffer);
 		}
 	}, 100);
 };
