@@ -5,7 +5,7 @@
   "description": "mediasoup demo app",
   "author": "Iñaki Baz Castillo <ibc@aliax.net>",
   "license": "All Rights Reserved",
-  "main": "lib/index.jsx",
+  "main": "main.js",
   "scripts": {
     "lint": "eslint -c .eslintrc.js --ext .js,.jsx gulpfile.js lib",
     "start": "gulp live"
@@ -50,6 +50,8 @@
     "browser-sync": "^2.26.7",
     "browserify": "^16.5.0",
     "del": "^5.1.0",
+    "electron": "^8.1.1",
+    "electron-connect": "^0.6.3",
     "envify": "^4.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-import": "^2.20.1",

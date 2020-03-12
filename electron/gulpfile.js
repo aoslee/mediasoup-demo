@@ -9,23 +9,6 @@
  *   Generates the browser app in development mode (unless NODE_ENV is set
  *   to 'production'), opens it and watches for changes in the source code.
  *
- * gulp devel
- *   Generates the browser app in development mode (unless NODE_ENV is set
- *   to 'production'), opens two browsers and watches for changes in the source
- *   code.
- *
- * gulp devel:tcp
- *   Same as gulp devel, but forcing media over TCP.
- *
- * gulp devel:vp9
- *   Generates the browser app in development mode (unless NODE_ENV is set
- *   to 'production'), opens two browsers forcing VP9 and watches for changes in
- *   the source code.
- *
- * gulp devel:h264
- *   Generates the browser app in development mode (unless NODE_ENV is set
- *   to 'production'), opens two browsers forcing H264 and watches for changes in
- *   the source code.
 
  * gulp
  *   Alias for `gulp dist`.
@@ -53,7 +36,8 @@ const eslint = require('gulp-eslint');
 const stylus = require('gulp-stylus');
 const cssBase64 = require('gulp-css-base64');
 const nib = require('nib');
-const browserSync = require('browser-sync');
+// const browserSync = require('browser-sync');
+const electron = require('electron-connect').server.create();
 
 const PKG = require('./package.json');
 const BANNER = fs.readFileSync('banner.txt').toString();
@@ -62,7 +46,7 @@ const BANNER_OPTIONS =
 	pkg         : PKG,
 	currentYear : (new Date()).getFullYear()
 };
-const OUTPUT_DIR = '../server/public';
+const OUTPUT_DIR = 'public';
 
 // Set Node 'development' environment (unless externally set).
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
@@ -82,7 +66,7 @@ function bundle(options)
 
 	let bundler = browserify(
 		{
-			entries      : PKG.main,
+			entries      : 'lib/index.jsx', // PKG.main,
 			extensions   : [ '.js', '.jsx' ],
 			// required for sourcemaps (must be false otherwise).
 			debug        : process.env.NODE_ENV === 'development',
@@ -93,6 +77,7 @@ function bundle(options)
 			// required to be true only for watchify.
 			fullPaths    : watch
 		})
+		.external('main.js')
 		.transform('babelify')
 		.transform(envify(
 			{
@@ -102,12 +87,13 @@ function bundle(options)
 
 	if (watch)
 	{
+		
 		bundler = watchify(bundler);
 
 		bundler.on('update', () =>
 		{
 			const start = Date.now();
-
+			
 			gutil.log('bundling...');
 			rebundle();
 			gutil.log('bundle took %sms', (Date.now() - start));
@@ -212,243 +198,55 @@ gulp.task('watch', (done) =>
 {
 	// Watch changes in HTML.
 	gulp.watch([ 'index.html' ], gulp.series(
-		'html'
+		'html',
+		'electronreload'
 	));
 
 	// Watch changes in Stylus files.
 	gulp.watch([ 'stylus/**/*.styl' ], gulp.series(
-		'css'
+		'css',
+		'electronreload'
 	));
 
 	// Watch changes in resources.
 	gulp.watch([ 'resources/**/*' ], gulp.series(
-		'resources', 'css'
+		'resources',
+		'css',
+		'electronreload'
 	));
 
 	// Watch changes in JS files.
 	gulp.watch([ 'gulpfile.js', 'lib/**/*.js', 'lib/**/*.jsx' ], gulp.series(
-		'lint'
+		'lint',
+		'bundle',
+		'electronreload'
 	));
 
 	done();
 });
+gulp.task('electronstart', (done) =>
+{
+	electron.start();
+	done();
+});
+gulp.task('electronreload', (done) =>
+{
+	electron.reload();
+	done();
+});
 
-gulp.task('browser:base', gulp.series(
+gulp.task('electron:base', gulp.series(
 	'clean',
 	'lint',
-	'bundle:watch',
 	'html',
 	'css',
 	'resources',
-	'watch'
+	'watch',
+	'bundle:watch',
+	'electronstart'
 ));
-
 gulp.task('live', gulp.series(
-	'browser:base',
-	(done) =>
-	{
-		const config = require('../server/config');
-
-		browserSync(
-			{
-				open      : 'external',
-				host      : config.domain,
-				startPath : '/?info=true',
-				server    :
-				{
-					baseDir : OUTPUT_DIR
-				},
-				https     : config.https.tls,
-				ghostMode : false,
-				files     : path.join(OUTPUT_DIR, '**', '*')
-			});
-
-		done();
-	}
-));
-
-gulp.task('devel', gulp.series(
-	'browser:base',
-	async (done) =>
-	{
-		const config = require('../server/config');
-
-		await new Promise((resolve) =>
-		{
-			browserSync.create('producer1').init(
-				{
-					open      : 'external',
-					host      : config.domain,
-					startPath : '/?roomId=devel&info=true&throttleSecret=foo&consume=false',
-					server    :
-					{
-						baseDir : OUTPUT_DIR
-					},
-					https     : config.https.tls,
-					ghostMode : false,
-					files     : path.join(OUTPUT_DIR, '**', '*')
-				},
-				resolve);
-		});
-
-		await new Promise((resolve) =>
-		{
-			browserSync.create('consumer1').init(
-				{
-					open      : 'external',
-					host      : config.domain,
-					startPath : '/?roomId=devel&info=true&throttleSecret=foo&produce=false',
-					server    :
-					{
-						baseDir : OUTPUT_DIR
-					},
-					https     : config.https.tls,
-					ghostMode : false,
-					files     : path.join(OUTPUT_DIR, '**', '*')
-				},
-				resolve);
-		});
-
-		done();
-	}
-));
-
-gulp.task('devel:tcp', gulp.series(
-	'browser:base',
-	async (done) =>
-	{
-		const config = require('../server/config');
-
-		await new Promise((resolve) =>
-		{
-			browserSync.create('producer1').init(
-				{
-					open      : 'external',
-					host      : config.domain,
-					startPath : '/?roomId=devel:tcp&info=true&throttleSecret=foo&forceTcp=true&consume=false',
-					server    :
-					{
-						baseDir : OUTPUT_DIR
-					},
-					https     : config.https.tls,
-					ghostMode : false,
-					files     : path.join(OUTPUT_DIR, '**', '*')
-				},
-				resolve);
-		});
-
-		await new Promise((resolve) =>
-		{
-			browserSync.create('consumer1').init(
-				{
-					open      : 'external',
-					host      : config.domain,
-					startPath : '/?roomId=devel:tcp&info=true&throttleSecret=foo&forceTcp=true&produce=false',
-					server    :
-					{
-						baseDir : OUTPUT_DIR
-					},
-					https     : config.https.tls,
-					ghostMode : false,
-					files     : path.join(OUTPUT_DIR, '**', '*')
-				},
-				resolve);
-		});
-
-		done();
-	}
-));
-
-gulp.task('devel:vp9', gulp.series(
-	'browser:base',
-	async (done) =>
-	{
-		const config = require('../server/config');
-
-		await new Promise((resolve) =>
-		{
-			browserSync.create('producer1').init(
-				{
-					open      : 'external',
-					host      : config.domain,
-					startPath : '/?roomId=devel:vp9&info=true&throttleSecret=foo&forceVP9=true&svc=L3T3&consume=false',
-					server    :
-					{
-						baseDir : OUTPUT_DIR
-					},
-					https     : config.https.tls,
-					ghostMode : false,
-					files     : path.join(OUTPUT_DIR, '**', '*')
-				},
-				resolve);
-		});
-
-		await new Promise((resolve) =>
-		{
-			browserSync.create('consumer1').init(
-				{
-					open      : 'external',
-					host      : config.domain,
-					startPath : '/?roomId=devel:vp9&info=true&throttleSecret=foo&forceVP9=true&svc=L3T3&produce=false',
-					server    :
-					{
-						baseDir : OUTPUT_DIR
-					},
-					https     : config.https.tls,
-					ghostMode : false,
-					files     : path.join(OUTPUT_DIR, '**', '*')
-				},
-				resolve);
-		});
-
-		done();
-	}
-));
-
-gulp.task('devel:h264', gulp.series(
-	'browser:base',
-	async (done) =>
-	{
-		const config = require('../server/config');
-
-		await new Promise((resolve) =>
-		{
-			browserSync.create('producer1').init(
-				{
-					open      : 'external',
-					host      : config.domain,
-					startPath : '/?roomId=devel:h264&info=true&throttleSecret=foo&forceH264=true&consume=false',
-					server    :
-					{
-						baseDir : OUTPUT_DIR
-					},
-					https     : config.https.tls,
-					ghostMode : false,
-					files     : path.join(OUTPUT_DIR, '**', '*')
-				},
-				resolve);
-		});
-
-		await new Promise((resolve) =>
-		{
-			browserSync.create('consumer1').init(
-				{
-					open      : 'external',
-					host      : config.domain,
-					startPath : '/?roomId=devel:h264&info=true&throttleSecret=foo&forceH264=true&produce=false',
-					server    :
-					{
-						baseDir : OUTPUT_DIR
-					},
-					https     : config.https.tls,
-					ghostMode : false,
-					files     : path.join(OUTPUT_DIR, '**', '*')
-				},
-				resolve);
-		});
-
-		done();
-	}
+	'electron:base'
 ));
 
 gulp.task('default', gulp.series('dist'));
