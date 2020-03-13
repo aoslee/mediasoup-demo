@@ -27,6 +27,8 @@
 		<div id='mediasoup-demo-app-media-query-detector'></div>
 	</body>
 	<script>
-	  require('electron-connect').client.create();
+	if (process.env.NODE_ENV === 'development') {
+		require('electron-connect').client.create();
+	}
   </script>
 </html>

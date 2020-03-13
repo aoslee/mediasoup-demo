@@ -23,6 +23,7 @@ const plumber = require('gulp-plumber');
 const rename = require('gulp-rename');
 const header = require('gulp-header');
 const touch = require('gulp-touch-cmd');
+const shell = require('gulp-shell');
 const browserify = require('browserify');
 const watchify = require('watchify');
 const envify = require('envify/custom');
@@ -36,7 +37,6 @@ const eslint = require('gulp-eslint');
 const stylus = require('gulp-stylus');
 const cssBase64 = require('gulp-css-base64');
 const nib = require('nib');
-// const browserSync = require('browser-sync');
 const electron = require('electron-connect').server.create();
 
 const PKG = require('./package.json');
@@ -77,7 +77,7 @@ function bundle(options)
 			// required to be true only for watchify.
 			fullPaths    : watch
 		})
-		.external('main.js')
+		.external([ 'main.js', 'gulpfile.js' ])
 		.transform('babelify')
 		.transform(envify(
 			{
@@ -185,13 +185,16 @@ gulp.task('bundle:watch', () =>
 	return bundle({ watch: true });
 });
 
+gulp.task('builder', shell.task('npm run package-win'));
+
 gulp.task('dist', gulp.series(
 	'clean',
 	'lint',
 	'bundle',
 	'html',
 	'css',
-	'resources'
+	'resources',
+	'builder'
 ));
 
 gulp.task('watch', (done) =>

@@ -1,5 +1,7 @@
 const { app, BrowserWindow } = require('electron')
-const { client } = require('electron-connect')
+if (process.env.NODE_ENV === 'development') {
+  const { client } = require('electron-connect')
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -13,7 +15,11 @@ function createWindow() {
   win.loadFile('./public/index.html')
 
   win.webContents.openDevTools()
-  client.create(win);
+
+  if (process.env.NODE_ENV === 'development') {
+    client.create(win);
+  }
+
 }
 
 // This method will be called when Electron has finished

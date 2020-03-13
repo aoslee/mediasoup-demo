@@ -8,7 +8,52 @@
   "main": "main.js",
   "scripts": {
     "lint": "eslint -c .eslintrc.js --ext .js,.jsx gulpfile.js lib",
-    "start": "gulp live"
+    "start": "cross-env NODE_ENV=production electron main.js",
+    "start-dev": "cross-env NODE_ENV=development gulp live",
+    "dist": "cross-env NODE_ENV=production gulp dist",
+    "package-all": "electron-builder build -mwl",
+    "package-mac": "electron-builder build --mac",
+    "package-linux": "electron-builder build --linux",
+    "package-win": "electron-builder build --win --x64"
+  },
+  "build": {
+    "productName": "MediasoupElectron",
+    "appId": "org.mediasoup.MediasoupElectron",
+    "files": [
+      "public/",
+      "main.js"
+    ],
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "rpm",
+        "AppImage"
+      ],
+      "category": "Development"
+    },
+    "directories": {
+      "buildResources": "resources/icons",
+      "output": "release"
+    }
   },
   "dependencies": {
     "@babel/runtime": "^7.8.4",
@@ -49,8 +94,10 @@
     "babelify": "^10.0.0",
     "browser-sync": "^2.26.7",
     "browserify": "^16.5.0",
+    "cross-env": "^7.0.2",
     "del": "^5.1.0",
     "electron": "^8.1.1",
+    "electron-builder": "^22.4.1",
     "electron-connect": "^0.6.3",
     "envify": "^4.1.0",
     "eslint": "^6.8.0",
@@ -64,6 +111,7 @@
     "gulp-if": "^3.0.0",
     "gulp-plumber": "^1.2.1",
     "gulp-rename": "^1.4.0",
+    "gulp-shell": "^0.8.0",
     "gulp-stylus": "^2.7.0",
     "gulp-touch-cmd": "0.0.1",
     "gulp-uglify-es": "^2.0.0",
