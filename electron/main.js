@@ -1,20 +1,27 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu } = require('electron')
 if (process.env.NODE_ENV === 'development') {
   const { client } = require('electron-connect')
 }
 
+Menu.setApplicationMenu(null)
+// app.commandLine.appendSwitch('force-fieldtrials', 'WebRTC-SupportVP9SVC/EnabledByFlag_3SL3TL/')
+
+
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    show:false,
+    // width: 1024,
+    // height: 768,
     webPreferences: {
       nodeIntegration: true
     }
   })
 
+  win.maximize()  
   win.loadFile('./public/index.html')
+  win.show()
 
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
 
   if (process.env.NODE_ENV === 'development') {
     client.create(win);
