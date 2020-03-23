@@ -10,6 +10,9 @@
     "lint": "eslint -c .eslintrc.js --ext .js,.jsx gulpfile.js lib",
     "start": "cross-env NODE_ENV=production electron main.js",
     "start-dev": "cross-env NODE_ENV=development gulp live",
+    "dist-win": "cross-env NODE_ENV=production gulp dist-win",
+    "dist-mac": "cross-env NODE_ENV=production gulp dist-mac",
+    "dist-linux": "cross-env NODE_ENV=production gulp dist-linux",
     "dist": "cross-env NODE_ENV=production gulp dist",
     "package-all": "electron-builder build -mwl",
     "package-mac": "electron-builder build --mac",
@@ -23,6 +26,15 @@
       "public/",
       "main.js"
     ],
+    "mac":{
+      "entitlements": "build/entitlements.mac.plist",
+      "hardenedRuntime": true,
+      "extendInfo":
+        {
+        "NSMicrophoneUsageDescription": "This app requires  mircrophone access.",
+        "NSCameraUsageDescription":"This app requires camera access."
+      }
+    },
     "dmg": {
       "contents": [
         {

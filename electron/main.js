@@ -1,12 +1,19 @@
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow, Menu, systemPreferences } = require('electron')
 if (process.env.NODE_ENV === 'development') {
   const { client } = require('electron-connect')
 }
 
-Menu.setApplicationMenu(null)
+// Menu.setApplicationMenu(null)
 // app.commandLine.appendSwitch('force-fieldtrials', 'WebRTC-SupportVP9SVC/EnabledByFlag_3SL3TL/')
-
-
+systemPreferences.askForMediaAccess('camera')
+// if (process.platform === 'darwin') {
+// //systemPreferences.askForMediaAccess('microphone')
+// systemPreferences.askForMediaAccess('camera').then(()=>{
+//     console.log('You have successfully!')
+//  },()=>{
+//    app.quit()
+//  })
+// }
 function createWindow() {
   const win = new BrowserWindow({
     show:false,

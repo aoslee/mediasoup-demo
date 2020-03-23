@@ -185,7 +185,43 @@ gulp.task('bundle:watch', () =>
 	return bundle({ watch: true });
 });
 
-gulp.task('builder', shell.task('npm run package-win'));
+gulp.task('builder-win', shell.task('npm run package-win'));
+
+gulp.task('dist-win', gulp.series(
+	'clean',
+	'lint',
+	'bundle',
+	'html',
+	'css',
+	'resources',
+	'builder-win'
+));
+
+gulp.task('builder-mac', shell.task('npm run package-mac'));
+
+gulp.task('dist-mac', gulp.series(
+	'clean',
+	'lint',
+	'bundle',
+	'html',
+	'css',
+	'resources',
+	'builder-mac'
+));
+
+gulp.task('builder-linux', shell.task('npm run package-linux'));
+
+gulp.task('dist-linux', gulp.series(
+	'clean',
+	'lint',
+	'bundle',
+	'html',
+	'css',
+	'resources',
+	'builder-linux'
+));
+
+gulp.task('builder-all', shell.task('npm run package-all'));
 
 gulp.task('dist', gulp.series(
 	'clean',
@@ -194,7 +230,7 @@ gulp.task('dist', gulp.series(
 	'html',
 	'css',
 	'resources',
-	'builder'
+	'builder-all'
 ));
 
 gulp.task('watch', (done) =>
