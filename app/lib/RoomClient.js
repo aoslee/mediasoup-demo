@@ -20,9 +20,9 @@ const PC_PROPRIETARY_CONSTRAINTS =
 
 const VIDEO_SIMULCAST_ENCODINGS =
 [
-	{ scaleResolutionDownBy: 4 },
-	{ scaleResolutionDownBy: 2 },
-	{ scaleResolutionDownBy: 1 }
+	{ maxBitrate: 180000, scaleResolutionDownBy: 4 },
+	{ maxBitrate: 360000, scaleResolutionDownBy: 2 },
+	{ maxBitrate: 1500000, scaleResolutionDownBy: 1 }
 ];
 
 // Used for VP9 webcam video.
@@ -353,7 +353,11 @@ export default class RoomClient
 						const { spatialLayers, temporalLayers } =
 							mediasoupClient.parseScalabilityMode(
 								consumer.rtpParameters.encodings[0].scalabilityMode);
-
+						let isshare=false;
+						if(appData.share)
+						{
+							isshare=true;
+						}
 						store.dispatch(stateActions.addConsumer(
 							{
 								id                     : consumer.id,
@@ -367,7 +371,8 @@ export default class RoomClient
 								preferredTemporalLayer : temporalLayers - 1,
 								priority               : 1,
 								codec                  : consumer.rtpParameters.codecs[0].mimeType.split('/')[1],
-								track                  : consumer.track
+								track                  : consumer.track,
+								isshare : isshare
 							},
 							peerId));
 
@@ -922,10 +927,10 @@ export default class RoomClient
 	{
 		logger.debug('enableWebcam()');
 
-		if (this._webcamProducer)
-			return;
-		else if (this._shareProducer)
-			await this.disableShare();
+		// if (this._webcamProducer)
+		// 	return;
+		// else if (this._shareProducer)
+		// 	await this.disableShare();
 
 		if (!this._mediasoupDevice.canProduce('video'))
 		{
@@ -1211,10 +1216,10 @@ export default class RoomClient
 	{
 		logger.debug('enableShare()');
 
-		if (this._shareProducer)
-			return;
-		else if (this._webcamProducer)
-			await this.disableWebcam();
+		// if (this._shareProducer)
+		// 	return;
+		// else if (this._webcamProducer)
+		// 	await this.disableWebcam();
 
 		if (!this._mediasoupDevice.canProduce('video'))
 		{
@@ -1257,44 +1262,50 @@ export default class RoomClient
 
 			track = stream.getVideoTracks()[0];
 
-			if (this._useSharingSimulcast)
-			{
-				// If VP9 is the only available video codec then use SVC.
-				const firstVideoCodec = this._mediasoupDevice
-					.rtpCapabilities
-					.codecs
-					.find((c) => c.kind === 'video');
+			// if (this._useSharingSimulcast)
+			// {
+			// 	// If VP9 is the only available video codec then use SVC.
+			// 	const firstVideoCodec = this._mediasoupDevice
+			// 		.rtpCapabilities
+			// 		.codecs
+			// 		.find((c) => c.kind === 'video');
 
-				let encodings;
+			// 	let encodings;
 
-				if (firstVideoCodec.mimeType.toLowerCase() === 'video/vp9')
-				{
-					encodings = VIDEO_SVC_ENCODINGS;
-				}
-				else
-				{
-					encodings = VIDEO_SIMULCAST_ENCODINGS
-						.map((encoding) => ({ ...encoding, dtx: true }));
-				}
+			// 	if (firstVideoCodec.mimeType.toLowerCase() === 'video/vp9')
+			// 	{
+			// 		encodings = VIDEO_SVC_ENCODINGS;
+			// 	}
+			// 	else
+			// 	{
+			// 		encodings = VIDEO_SIMULCAST_ENCODINGS
+			// 			.map((encoding) => ({ ...encoding, dtx: true }));
+			// 	}
 
-				this._shareProducer = await this._sendTransport.produce(
+			// 	this._shareProducer = await this._sendTransport.produce(
+			// 		{
+			// 			track,
+			// 			encodings,
+			// 			codecOptions :
+			// 			{
+			// 				videoGoogleStartBitrate : 1000
+			// 			},
+			// 			appData :
+			// 			{
+			// 				share : true
+			// 			}
+			// 		});
+			// }
+			// else
+			// {
+				this._shareProducer = await this._sendTransport.produce({ 
+					track,
+					appData :
 					{
-						track,
-						encodings,
-						codecOptions :
-						{
-							videoGoogleStartBitrate : 1000
-						},
-						appData :
-						{
-							share : true
-						}
-					});
-			}
-			else
-			{
-				this._shareProducer = await this._sendTransport.produce({ track });
-			}
+						share : true
+					}
+				 });
+			// }
 
 			store.dispatch(stateActions.addProducer(
 				{
@@ -1903,6 +1914,18 @@ export default class RoomClient
 			'getProducerStats', { producerId: producer.id });
 	}
 
+	async getShareRemoteStats()
+	{
+		logger.debug('getShareRemoteStats()');
+
+		const producer = this._shareProducer;
+
+		if (!producer)
+			return;
+		logger.debug(JSON.stringify( producer));
+		return this._protoo.request(
+			'getProducerStats', { producerId: producer.id });
+	}
 	async getConsumerRemoteStats(consumerId)
 	{
 		logger.debug('getConsumerRemoteStats()');
@@ -1994,7 +2017,17 @@ export default class RoomClient
 
 		return producer.getStats();
 	}
+	async getShareLocalStats()
+	{
+		logger.debug('getShareLocalStats()');
 
+		const producer = this._shareProducer;
+
+		if (!producer)
+			return;
+
+		return producer.getStats();
+	}
 	async getConsumerLocalStats(consumerId)
 	{
 		const consumer = this._consumers.get(consumerId);
@@ -2141,7 +2174,7 @@ export default class RoomClient
 									rtpParameters,
 									appData
 								});
-
+							logger.debug('*****'+id);
 							callback({ id });
 						}
 						catch (error)

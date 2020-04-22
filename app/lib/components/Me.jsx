@@ -27,6 +27,7 @@ class Me extends React.Component
 			me,
 			audioProducer,
 			videoProducer,
+			shareProducer,
 			faceDetection,
 			onSetStatsPeerId
 		} = this.props;
@@ -73,6 +74,100 @@ class Me extends React.Component
 			tip = 'Click on your name to change it';
 
 		return (
+			<div>
+			<div
+			data-component='Me'
+			ref={(node) => (this._rootNode = node)}
+			data-tip={tip}
+			data-tip-disable={!tip}
+		>
+			<If condition={connected}>
+				<div className='controls'>
+					<div
+						className={classnames('button', 'mic', micState)}
+						onClick={() =>
+						{
+							micState === 'on'
+								? roomClient.muteMic()
+								: roomClient.unmuteMic();
+						}}
+					/>
+
+					<div
+						className={classnames('button', 'webcam', webcamState, {
+							disabled : me.webcamInProgress || me.shareInProgress
+						})}
+						onClick={() =>
+						{
+							if (webcamState === 'on')
+							{
+								cookiesManager.setDevices({ webcamEnabled: false });
+								roomClient.disableWebcam();
+							}
+							else
+							{
+								cookiesManager.setDevices({ webcamEnabled: true });
+								roomClient.enableWebcam();
+							}
+						}}
+					/>
+
+					<div
+						className={classnames('button', 'change-webcam', changeWebcamState, {
+							disabled : me.webcamInProgress || me.shareInProgress
+						})}
+						onClick={() => roomClient.changeWebcam()}
+					/>
+
+					<div
+						className={classnames('button', 'share', shareState, {
+							disabled : me.shareInProgress || me.webcamInProgress
+						})}
+						onClick={() =>
+						{
+							if (shareState === 'on')
+								roomClient.disableShare();
+							else
+								roomClient.enableShare();
+						}}
+					/>
+				</div>
+			</If>
+
+			<PeerView
+				isMe
+				peer={me}
+				audioProducerId={audioProducer ? audioProducer.id : null}
+				videoProducerId={videoProducer ? videoProducer.id : null}
+				audioRtpParameters={audioProducer ? audioProducer.rtpParameters : null}
+				videoRtpParameters={videoProducer ? videoProducer.rtpParameters : null}
+				audioTrack={audioProducer ? audioProducer.track : null}
+				videoTrack={videoProducer ? videoProducer.track : null}
+				videoVisible={videoVisible}
+				audioCodec={audioProducer ? audioProducer.codec : null}
+				videoCodec={videoProducer ? videoProducer.codec : null}
+				audioScore={audioProducer ? audioProducer.score : null}
+				videoScore={videoProducer ? videoProducer.score : null}
+				faceDetection={faceDetection}
+				onChangeDisplayName={(displayName) =>
+				{
+					roomClient.changeDisplayName(displayName);
+				}}
+				onChangeMaxSendingSpatialLayer={(spatialLayer) =>
+				{
+					roomClient.setMaxSendingSpatialLayer(spatialLayer);
+				}}
+				onStatsClick={onSetStatsPeerId}
+			/>
+
+			<ReactTooltip
+				type='light'
+				effect='solid'
+				delayShow={100}
+				delayHide={100}
+				delayUpdate={50}
+			/>
+		</div>
 			<div
 				data-component='Me'
 				ref={(node) => (this._rootNode = node)}
@@ -136,16 +231,16 @@ class Me extends React.Component
 					isMe
 					peer={me}
 					audioProducerId={audioProducer ? audioProducer.id : null}
-					videoProducerId={videoProducer ? videoProducer.id : null}
+					videoProducerId={shareProducer ? shareProducer.id : null}
 					audioRtpParameters={audioProducer ? audioProducer.rtpParameters : null}
-					videoRtpParameters={videoProducer ? videoProducer.rtpParameters : null}
+					videoRtpParameters={shareProducer ? shareProducer.rtpParameters : null}
 					audioTrack={audioProducer ? audioProducer.track : null}
-					videoTrack={videoProducer ? videoProducer.track : null}
+					videoTrack={shareProducer ? shareProducer.track : null}
 					videoVisible={videoVisible}
 					audioCodec={audioProducer ? audioProducer.codec : null}
-					videoCodec={videoProducer ? videoProducer.codec : null}
+					videoCodec={shareProducer ? shareProducer.codec : null}
 					audioScore={audioProducer ? audioProducer.score : null}
-					videoScore={videoProducer ? videoProducer.score : null}
+					videoScore={shareProducer ? shareProducer.score : null}
 					faceDetection={faceDetection}
 					onChangeDisplayName={(displayName) =>
 					{
@@ -165,6 +260,7 @@ class Me extends React.Component
 					delayHide={100}
 					delayUpdate={50}
 				/>
+			</div>
 			</div>
 		);
 	}
@@ -211,13 +307,16 @@ const mapStateToProps = (state) =>
 	const audioProducer =
 		producersArray.find((producer) => producer.track.kind === 'audio');
 	const videoProducer =
-		producersArray.find((producer) => producer.track.kind === 'video');
+		producersArray.find((producer) => producer.track.kind === 'video' && producer.type !== 'share');
+	const shareProducer =
+		producersArray.find((producer) => producer.type === 'share');
 
 	return {
 		connected     : state.room.state === 'connected',
 		me            : state.me,
 		audioProducer : audioProducer,
 		videoProducer : videoProducer,
+		shareProducer : shareProducer,
 		faceDetection : state.room.faceDetection
 	};
 };

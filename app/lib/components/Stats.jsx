@@ -22,6 +22,8 @@ class Stats extends React.Component
 			audioProducerLocalStats     : null,
 			videoProducerRemoteStats    : null,
 			videoProducerLocalStats     : null,
+			shareProducerRemoteStats    : null,
+			shareProducerLocalStats     : null,
 			chatDataProducerRemoteStats : null,
 			botDataProducerRemoteStats  : null,
 			audioConsumerRemoteStats    : null,
@@ -53,6 +55,8 @@ class Stats extends React.Component
 			audioProducerLocalStats,
 			videoProducerRemoteStats,
 			videoProducerLocalStats,
+			shareProducerRemoteStats,
+			shareProducerLocalStats,
 			chatDataProducerRemoteStats,
 			botDataProducerRemoteStats,
 			audioConsumerRemoteStats,
@@ -118,6 +122,15 @@ class Stats extends React.Component
 									<a href='#video-producer-remote-stats'>[remote]</a>
 									<span>{' '}</span>
 									<a href='#video-producer-local-stats'>[local]</a>
+								</p>
+							</If>
+
+							<If condition={shareProducerRemoteStats || shareProducerLocalStats}>
+								<p>
+									{'share producer stats: '}
+									<a href='#share-producer-remote-stats'>[remote]</a>
+									<span>{' '}</span>
+									<a href='#share-producer-local-stats'>[local]</a>
 								</p>
 							</If>
 
@@ -210,6 +223,14 @@ class Stats extends React.Component
 							{this._printStats('video producer local stats', videoProducerLocalStats)}
 						</If>
 
+						<If condition={shareProducerRemoteStats}>
+							{this._printStats('share producer remote stats', shareProducerRemoteStats)}
+						</If>
+
+						<If condition={shareProducerLocalStats}>
+							{this._printStats('share producer local stats', shareProducerLocalStats)}
+						</If>
+
 						<If condition={chatDataProducerRemoteStats}>
 							{this._printStats('chat dataproducer remote stats', chatDataProducerRemoteStats)}
 						</If>
@@ -285,6 +306,8 @@ class Stats extends React.Component
 		let audioProducerLocalStats = null;
 		let videoProducerRemoteStats = null;
 		let videoProducerLocalStats = null;
+		let shareProducerRemoteStats = null;
+		let shareProducerLocalStats = null;
 		let chatDataProducerRemoteStats = null;
 		let botDataProducerRemoteStats = null;
 		let audioConsumerRemoteStats = null;
@@ -296,23 +319,23 @@ class Stats extends React.Component
 
 		if (isMe)
 		{
-			sendTransportRemoteStats = await roomClient.getSendTransportRemoteStats()
-				.catch(() => {});
+			// sendTransportRemoteStats = await roomClient.getSendTransportRemoteStats()
+			// 	.catch(() => {});
 
-			sendTransportLocalStats = await roomClient.getSendTransportLocalStats()
-				.catch(() => {});
+			// sendTransportLocalStats = await roomClient.getSendTransportLocalStats()
+			// 	.catch(() => {});
 
-			recvTransportRemoteStats = await roomClient.getRecvTransportRemoteStats()
-				.catch(() => {});
+			// recvTransportRemoteStats = await roomClient.getRecvTransportRemoteStats()
+			// 	.catch(() => {});
 
-			recvTransportLocalStats = await roomClient.getRecvTransportLocalStats()
-				.catch(() => {});
+			// recvTransportLocalStats = await roomClient.getRecvTransportLocalStats()
+			// 	.catch(() => {});
 
-			audioProducerRemoteStats = await roomClient.getAudioRemoteStats()
-				.catch(() => {});
+			// audioProducerRemoteStats = await roomClient.getAudioRemoteStats()
+			// 	.catch(() => {});
 
-			audioProducerLocalStats = await roomClient.getAudioLocalStats()
-				.catch(() => {});
+			// audioProducerLocalStats = await roomClient.getAudioLocalStats()
+			// 	.catch(() => {});
 
 			videoProducerRemoteStats = await roomClient.getVideoRemoteStats()
 				.catch(() => {});
@@ -320,15 +343,21 @@ class Stats extends React.Component
 			videoProducerLocalStats = await roomClient.getVideoLocalStats()
 				.catch(() => {});
 
-			chatDataProducerRemoteStats = await roomClient.getChatDataProducerRemoteStats()
+			shareProducerRemoteStats = await roomClient.getShareRemoteStats()
 				.catch(() => {});
 
-			botDataProducerRemoteStats = await roomClient.getBotDataProducerRemoteStats()
+			shareProducerLocalStats = await roomClient.getShareLocalStats()
 				.catch(() => {});
 
-			botDataConsumerRemoteStats =
-				await roomClient.getDataConsumerRemoteStats(botDataConsumerId)
-					.catch(() => {});
+			// chatDataProducerRemoteStats = await roomClient.getChatDataProducerRemoteStats()
+			// 	.catch(() => {});
+
+			// botDataProducerRemoteStats = await roomClient.getBotDataProducerRemoteStats()
+			// 	.catch(() => {});
+
+			// botDataConsumerRemoteStats =
+			// 	await roomClient.getDataConsumerRemoteStats(botDataConsumerId)
+			// 		.catch(() => {});
 		}
 		else
 		{
@@ -359,6 +388,8 @@ class Stats extends React.Component
 				audioProducerLocalStats,
 				videoProducerRemoteStats,
 				videoProducerLocalStats,
+				shareProducerRemoteStats,
+				shareProducerLocalStats,
 				chatDataProducerRemoteStats,
 				botDataProducerRemoteStats,
 				audioConsumerRemoteStats,
