@@ -425,20 +425,17 @@ class Room extends EventEmitter
 	 * @type {String} broadcasterId
 	 * @type {String} type - Can be 'plain' (PlainTransport) or 'webrtc'
 	 *   (WebRtcTransport).
-	 * @type {Boolean} [rtcpMux=true] - Just for PlainTransport, use RTCP mux.
+	 * @type {Boolean} [rtcpMux=false] - Just for PlainTransport, use RTCP mux.
 	 * @type {Boolean} [comedia=true] - Just for PlainTransport, enable remote IP:port
 	 *   autodetection.
-	 * @type {Boolean} [multiSource=false] - Just for PlainTransport, allow RTP from any
-	 *   remote IP and port (no RTCP feedback will be sent to the remote).
 	 * @type {Object} [sctpCapabilities] - SCTP capabilities
 	 */
 	async createBroadcasterTransport(
 		{
 			broadcasterId,
 			type,
-			rtcpMux = true,
+			rtcpMux = false,
 			comedia = true,
-			multiSource = false,
 			sctpCapabilities
 		})
 	{
@@ -478,9 +475,8 @@ class Room extends EventEmitter
 				const plainTransportOptions =
 				{
 					...config.mediasoup.plainTransportOptions,
-					rtcpMux     : Boolean(rtcpMux),
-					comedia     : Boolean(comedia),
-					multiSource : Boolean(multiSource)
+					rtcpMux : rtcpMux,
+					comedia : comedia
 				};
 
 				const transport = await this._mediasoupRouter.createPlainTransport(
